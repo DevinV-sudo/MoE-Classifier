@@ -63,7 +63,7 @@ def load_tokenizer(model_name):
     tokenizer = DistilBertTokenizer.from_pretrained(model_name)
     return tokenizer
 
-def create_dataloaders(batch_size, base_path="/projects/dsci410_510/SyntheticQueryData", model_name='distilbert-base-uncased'):
+def create_dataloaders(base_path="/projects/dsci410_510/SyntheticQueryData", model_name='distilbert-base-uncased', batch_size)
     '''
     This function loads in the dataset for each split, and generates dataloaders for each
     each data loader is initialized, and returned for use in model training
@@ -111,7 +111,7 @@ def create_dataloaders(batch_size, base_path="/projects/dsci410_510/SyntheticQue
         return None
 
 #example usage
-if __name__ == "__main__":
+if __name__ = "__main__":
     #generate loaders
     loaders = create_dataloaders(base_path="/projects/dsci410_510/SyntheticQueryData", model_name='distilbert-base-uncased', batch_size=64)
 
