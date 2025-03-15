@@ -38,6 +38,9 @@ These splits are stored are then stored on University of Oregon's HPC cluster, T
 ### Results
 The model is currently running it's tuning and training pipeline, stay tuned. 
 
+<<<<<<< HEAD
 =======
 # MoE-Gate
 MoE-Gating for RAG:  infers routing decisions based on agentically generated training data via clustering expert knowledge embeddings.
+=======
+>>>>>>> f6a7621 (Update README.md)
