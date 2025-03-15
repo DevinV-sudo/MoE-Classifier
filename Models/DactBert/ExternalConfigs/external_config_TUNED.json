@@ -1,0 +1,8 @@
+{
+    "split_prop": 0.3,
+    "batch_size": 96,
+    "reduction": "mean",
+    "num_epochs": 45,
+    "learning_rate": 0.00012337885627426224,
+    "weight_decay": 1e-05
+}

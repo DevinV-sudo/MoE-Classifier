@@ -1,0 +1,6 @@
+{
+    "lr": 4.699922392949821e-05,
+    "batch_size": 64,
+    "num_epochs": 30,
+    "split_prop": 0.2
+}

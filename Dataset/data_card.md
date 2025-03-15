@@ -25,4 +25,14 @@ The resulting datasets are HuggingFace datasets, which consist of two features:
 
 These are the datasets that are being loaded in "data_loaders.py"
 
+# Important Notes
+
+The methods used to generate the data are all available and documented in the DataGen Directory. However if you wish to run them for yourself you will need the following:
+
+- OpenAI API Key
+- PineCone API Key
+- PineCone Index containing semantic context vectors, with the original embedding text as meta_data
+
+I saved the QuestionData.csv to the Repo. if you wish to create and run your own version of the model, run process_data and just change the save dir endpoint in main to your local storage.
+
 

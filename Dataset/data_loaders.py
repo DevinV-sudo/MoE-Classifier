@@ -19,7 +19,7 @@ import logging
 
 #set up logging config
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[logging.StreamHandler()]
 )
@@ -63,12 +63,29 @@ def load_tokenizer(model_name):
     tokenizer = DistilBertTokenizer.from_pretrained(model_name)
     return tokenizer
 
-def create_dataloaders(batch_size, base_path="/projects/dsci410_510/SyntheticQueryData", model_name='distilbert-base-uncased'):
+def create_dataloaders(batch_size, base_path="/projects/dsci410_510/SyntheticQueryData/", model_name='distilbert-base-uncased', split_prop=0.2):
     '''
     This function loads in the dataset for each split, and generates dataloaders for each
     each data loader is initialized, and returned for use in model training
     '''
+    #ensure that selected split option is valid
+    split_proportions = {}
+
+    #extracting proportion data was split on from directory name pattern
+    split_dirs = [d for d in os.listdir(base_path) if os.path.isdir(os.path.join(base_path, d))]
+    for d in split_dirs:
+        try:
+            split_str = d.split("_DataSplitProp")[0]
+            split_float = float(split_str.replace("_", "."))
+            split_proportions[split_float] = d
+        except ValueError:
+            pass
     
+    if split_prop not in split_proportions.keys():
+        logging.error("User Selected Invalid Split.\n")
+        logging.info(f"Valid Splits: {split_proportions.keys()}\n")
+        return None
+
     #load in the tokenizer
     try:
         logging.info(f"Loading tokenizer...\n")
@@ -81,6 +98,7 @@ def create_dataloaders(batch_size, base_path="/projects/dsci410_510/SyntheticQue
 
     #load in each dataset
     try:
+        base_path = os.path.join(base_path, split_proportions[split_prop])
         logging.info(f"Loading Datasets...\n")
         train_dataset = load_datasets(base_path, "Train")
         valid_dataset = load_datasets(base_path, "Valid")
@@ -97,9 +115,9 @@ def create_dataloaders(batch_size, base_path="/projects/dsci410_510/SyntheticQue
     #load dataloaders
     try:
         logging.info(f"Creating data loaders...\n")
-        train_dataloader = DataLoader(train_dataset, shuffle=True, batch_size=batch_size, collate_fn=data_collator)
-        test_dataloader = DataLoader(test_dataset, shuffle=False, batch_size=batch_size, collate_fn=data_collator)
-        valid_dataloader = DataLoader(valid_dataset, shuffle=False, batch_size=batch_size, collate_fn=data_collator)
+        train_dataloader = DataLoader(train_dataset, shuffle=True, batch_size=batch_size, collate_fn=data_collator, drop_last=True)
+        test_dataloader = DataLoader(test_dataset, shuffle=False, batch_size=batch_size, collate_fn=data_collator, drop_last=True)
+        valid_dataloader = DataLoader(valid_dataset, shuffle=False, batch_size=batch_size, collate_fn=data_collator, drop_last=True)
         logging.info(f"Successfully created data loaders.\n")
 
         #return dataloaders
@@ -113,7 +131,7 @@ def create_dataloaders(batch_size, base_path="/projects/dsci410_510/SyntheticQue
 #example usage
 if __name__ == "__main__":
     #generate loaders
-    loaders = create_dataloaders(base_path="/projects/dsci410_510/SyntheticQueryData", model_name='distilbert-base-uncased', batch_size=64)
+    loaders = create_dataloaders(base_path="/projects/dsci410_510/SyntheticQueryData", model_name='distilbert-base-uncased', split_prop = 0.2, batch_size=64)
 
     train_dataloader, valid_dataloader, test_dataloader = loaders
 
