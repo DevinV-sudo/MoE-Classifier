@@ -30,7 +30,11 @@ These splits are stored are then stored on University of Oregon's HPC cluster, T
 
 
 ### Methods Overview
-- In progress
+- Detailed BackBone methods: [BackBone](./Models/BackBone/back_bone.md)
+- Detailed DactBert methods: [DactBert](./Models/BackBone/back_bone.md)
+- Detailed DactBert TrainingEngine: [TrainingEngine](./Models/DactBert/training_engine.md)
+- Detailed DactBert TuningEnginge: [TuningEngine](./Models/DactBert/tuning_engine.md)
 
 ### Results
-- In progress
+The model is currently running it's tuning and training pipeline, stay tuned. 
+
