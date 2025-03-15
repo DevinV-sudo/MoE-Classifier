@@ -269,6 +269,7 @@ class DactBert(nn.Module):
             config = json.load(f)
 
         #instiantiate model
+        logging.info(f"Loading from Pre-built Configuration...\n")
         model = cls(
             backbone_weight_path=config["backbone_weight_path"],
             classifier_config=config["classifier_config"],
@@ -278,6 +279,7 @@ class DactBert(nn.Module):
 
         #check for pretrained weights
         if config["pretrained_weights"]:
+            logging.info(f"Configuring Pre-Trained Weights...\n")
             #load in binary file
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
             pretrained_weights = torch.load(config["pretrained_weights"], map_location=device, weights_only=True)
@@ -286,6 +288,7 @@ class DactBert(nn.Module):
             model.load_state_dict(pretrained_weights)
 
         #return the configured model
+        logging.info(f"Model Ready.\n")
         return model
 
             
