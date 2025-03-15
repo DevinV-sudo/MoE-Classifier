@@ -1,0 +1,7 @@
+{
+    "num_layers": 5,
+    "hidden_units": 768,
+    "dropout": 0.4,
+    "use_batch_norm": true,
+    "activation": "LeakyReLU"
+}
