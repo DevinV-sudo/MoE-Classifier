@@ -496,7 +496,7 @@ class TuningEngine():
         '''
 
         #suggest lambda_reg values
-        lambda_reg_trial = trial.suggest_float("lambda_reg", 5e-5, 5e-1, log=True)
+        lambda_reg_trial = trial.suggest_categorical("lambda_reg", [5e-1, 5e-2, 5e-3, 5e-4, 5e-5, 5e-6])
 
         #initialize an instance of dact_bert
         lambda_tune_model = DactBert(classifier_config=self.classifier_config,
