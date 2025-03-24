@@ -77,7 +77,7 @@ class ModularSubModel():
             #non static input layer, changes by base hidden units, activation, dropout, norm etc. prepares layer architecture dimensionality
             input_layer = nn.Linear(self.hidden_dimension, base_hidden_units)
             layers.append(input_layer)
-            
+
             #if batch norm add it
             if use_batch_norm:
                 layers.append(nn.BatchNorm1d(base_hidden_units))
@@ -98,89 +98,92 @@ class ModularSubModel():
             #initializing the reverse indexing
             reverse_idx = -1
 
-            #iterate through the number of layers
-            for i in range(1, num_layers+1):
-                #based on strategy change hidden units (first layer is fully connected)
-                if layer_strategy == "pyramidal":
-                    if i == 1:
-                        logging.info("Structure is Pyramidal.\n")
+            #if the number of layers specified is != 1, run construction loop, else just input and out put layers
+            if num_layers > 1:
+                logging.info(f" Number of layers specfied is greater than one, running construction loop.\n")
+                #iterate through the number of layers
+                for i in range(1, num_layers+1):
+                    #based on strategy change hidden units (first layer is fully connected)
+                    if layer_strategy == "pyramidal":
+                        if i == 1:
+                            logging.info("Structure is Pyramidal.\n")
 
-                    #gradually decrease hidden units
-                    hidden_units = max(int(base_hidden_units * (1 - i/num_layers)), 32)
-                    logging.info(f"layer: {i}, units: {hidden_units}\n")
-
-                elif layer_strategy == "inverted_pyramidal":
-                    if i == 1:
-                        logging.info(f"Structure is Inverted Pyramidal.\n")
-
-                    #gradually increase layer sizes
-                    hidden_units = int(base_hidden_units * (1 + i/num_layers))
-                    logging.info(f"layer: {i}, units: {hidden_units}\n")
-
-                elif layer_strategy == "bow_tie":
-                    #first half decrease hidden units
-                    if i == 1:
-                        logging.info(f"Structure is BowTie.\n")
-
-                    if i <= num_layers // 2:
-                        logging.info(f"First half of Bowtie (Decrement)\n")
-                        hidden_units = int(base_hidden_units * (1 - i/num_layers))
-                        #store the hidden units for back stepping
-                        previous_hidden.append(hidden_units)
+                        #gradually decrease hidden units
+                        hidden_units = max(int(base_hidden_units * (1 - i/num_layers)), 32)
                         logging.info(f"layer: {i}, units: {hidden_units}\n")
 
-                    #second half increase hidden units (back step through previous hidden units)
+                    elif layer_strategy == "inverted_pyramidal":
+                        if i == 1:
+                            logging.info(f"Structure is Inverted Pyramidal.\n")
+
+                        #gradually increase layer sizes
+                        hidden_units = int(base_hidden_units * (1 + i/num_layers))
+                        logging.info(f"layer: {i}, units: {hidden_units}\n")
+
+                    elif layer_strategy == "bow_tie":
+                        #first half decrease hidden units
+                        if i == 1:
+                            logging.info(f"Structure is BowTie.\n")
+
+                        if i <= num_layers // 2:
+                            logging.info(f"First half of Bowtie (Decrement)\n")
+                            hidden_units = int(base_hidden_units * (1 - i/num_layers))
+                            #store the hidden units for back stepping
+                            previous_hidden.append(hidden_units)
+                            logging.info(f"layer: {i}, units: {hidden_units}\n")
+
+                        #second half increase hidden units (back step through previous hidden units)
+                        else:
+                            logging.info(f"Second half of Bowtie (Increment)\n")
+                            #initialize as most recent hidden unit counr
+                            hidden_units = previous_hidden[reverse_idx]
+                            logging.info(f"layer: {i}, units: {hidden_units}\n")
+
+                            #decrement by one
+                            reverse_idx  = reverse_idx -1
+
                     else:
-                        logging.info(f"Second half of Bowtie (Increment)\n")
-                        #initialize as most recent hidden unit counr
-                        hidden_units = previous_hidden[reverse_idx]
-                        logging.info(f"layer: {i}, units: {hidden_units}\n")
+                        #if not strategy keep base units consistent
+                        logging.info(f"No structure specified. Consistent hidden units applied.\n")
+                        hidden_units = base_hidden_units
 
-                        #decrement by one
-                        reverse_idx  = reverse_idx -1
+                    #store the layer & activation
+                    layers.append(nn.Linear(in_features, hidden_units))
 
-                else:
-                    #if not strategy keep base units consistent
-                    logging.info(f"No structure specified. Consistent hidden units applied.\n")
-                    hidden_units = base_hidden_units
+                    #if batch norm is involved add it
+                    if use_batch_norm:
+                        layers.append(nn.BatchNorm1d(hidden_units))
 
-                #store the layer & activation
-                layers.append(nn.Linear(in_features, hidden_units))
+                    #add the activation (post norm if specified)
+                    layers.append(activation)
 
-                #if batch norm is involved add it
-                if use_batch_norm:
-                    layers.append(nn.BatchNorm1d(hidden_units))
+                    #dropout if specified
+                    if dropout > 0:
+                        layers.append(nn.Dropout(dropout))
+                    
+                    #reset the in features
+                    in_features = hidden_units
 
-                #add the activation (post norm if specified)
-                layers.append(activation)
+                #if the layer structure is bow tie, append the final bowtie (missed by the for loop)
+                if layer_strategy == "bow_tie":
+                    logging.info(f"Adding final increment layer.\n")
+                    layers.append(nn.Linear(in_features, base_hidden_units))
+                    logging.info(f"layer: Final, units: {base_hidden_units}\n")
 
-                #dropout if specified
-                if dropout > 0:
-                    layers.append(nn.Dropout(dropout))
-                
-                #reset the in features
-                in_features = hidden_units
+                    #if batch norm is involved add it
+                    if use_batch_norm:
+                        layers.append(nn.BatchNorm1d(base_hidden_units))
 
-            #if the layer structure is bow tie, append the final bowtie (missed by the for loop)
-            if layer_strategy == "bow_tie":
-                logging.info(f"Adding final increment layer.\n")
-                layers.append(nn.Linear(in_features, base_hidden_units))
-                logging.info(f"layer: Final, units: {base_hidden_units}\n")
+                    #add the activation (post norm if specified)
+                    layers.append(activation)
 
-                #if batch norm is involved add it
-                if use_batch_norm:
-                    layers.append(nn.BatchNorm1d(base_hidden_units))
+                    #dropout if specified
+                    if dropout > 0:
+                        layers.append(nn.Dropout(dropout))
 
-                #add the activation (post norm if specified)
-                layers.append(activation)
-
-                #dropout if specified
-                if dropout > 0:
-                    layers.append(nn.Dropout(dropout))
-
-                #reset the in_features, for final activation
-                in_features = base_hidden_units
-
+                    #reset the in_features, for final activation
+                    in_features = base_hidden_units
+            
             #append the output layer (and specified final activation)
             layers.append(nn.Linear(in_features, output_dimension))
             if final_activation:
@@ -227,7 +230,7 @@ class ModularSubModel():
 
 ########EXAMPLE USAGE##########
 pyramidal_test_dict = {
-                    "num_layers": 4,
+                    "num_layers": 1,
                     "hidden_units": 128,
                     "dropout": 0.3,
                     "use_batch_norm": True,
@@ -236,7 +239,7 @@ pyramidal_test_dict = {
 }
 
 inverted_pyramidal_test_dict = {
-                    "num_layers": 4,
+                    "num_layers": 1,
                     "hidden_units": 128,
                     "dropout": 0.3,
                     "use_batch_norm": True,
@@ -245,7 +248,7 @@ inverted_pyramidal_test_dict = {
 }
 
 bow_tie_test_dict = {
-                    "num_layers": 4,
+                    "num_layers": 1,
                     "hidden_units": 128,
                     "dropout": 0.3,
                     "use_batch_norm": True,

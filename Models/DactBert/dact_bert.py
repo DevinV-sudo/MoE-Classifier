@@ -125,14 +125,14 @@ class DactBert(nn.Module):
         
         #initialize Dact-submodel's Defaults
         classifier_default = {
-            "num_layers": 1,
+            "num_layers": 2,
             "hidden_units": self.hidden_dimension // 2,
             "dropout": 0,
             "use_batch_norm": True,
             "activation": "ReLU"
         }
         confidence_default = {
-            "num_layers": 1,
+            "num_layers": 2,
             "hidden_units": self.hidden_dimension // 2,
             "dropout": 0,
             "use_batch_norm": True,
