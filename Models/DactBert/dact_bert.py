@@ -321,7 +321,8 @@ class TuningEngine():
             "hidden_units": trial.suggest_int("classifier_hidden_units", 64, 768, step=64),
             "dropout": trial.suggest_float("classifier_dropout", 0.0, 0.5, step=0.1),
             "use_batch_norm": trial.suggest_categorical("classifier_use_batch_norm", [True, False]),
-            "activation": trial.suggest_categorical("classifier_activation", ["ReLU", "LeakyReLU"])
+            "activation": trial.suggest_categorical("classifier_activation", ["ReLU", "LeakyReLU"]),
+            "layer_strategy": trial.suggest_categorical("layer_strategy", ["pyramidal", "inverted_pyramidal", "bow_tie", "None"])
         }
         #suggest hyperparameters for the confidence & package as a dictionary
         confidence_config = {
@@ -329,7 +330,9 @@ class TuningEngine():
             "hidden_units": trial.suggest_int("confidence_hidden_units", 64, 768, step=64),
             "dropout": trial.suggest_float("confidence_dropout", 0.0, 0.5, step=0.1),
             "use_batch_norm": trial.suggest_categorical("confidence_use_batch_norm", [True, False]),
-            "activation": trial.suggest_categorical("confidence_activation", ["ReLU", "LeakyReLU"])
+            "activation": trial.suggest_categorical("confidence_activation", ["ReLU", "LeakyReLU"]),
+            "layer_strategy": trial.suggest_categorical("layer_strategy", ["pyramidal", "inverted_pyramidal", "bow_tie", "None"])
+
         }
 
         #initialize an instance of DactBert (with both submodels -> modular)
