@@ -317,7 +317,7 @@ class TuningEngine():
     def submodel_objective(self, trial):
         #suggest hyperparameters for the classifier & package as a dictionary
         classifier_config = {
-            "num_layers": trial.suggest_int("classifier_num_layers", 2, 6, step=1),
+            "num_layers": trial.suggest_int("classifier_num_layers", 1, 6, step=1),
             "hidden_units": trial.suggest_int("classifier_hidden_units", 64, 768, step=64),
             "dropout": trial.suggest_float("classifier_dropout", 0.0, 0.5, step=0.1),
             "use_batch_norm": trial.suggest_categorical("classifier_use_batch_norm", [True, False]),
@@ -326,7 +326,7 @@ class TuningEngine():
         }
         #suggest hyperparameters for the confidence & package as a dictionary
         confidence_config = {
-            "num_layers": trial.suggest_int("confidence_num_layers", 2, 6, step=1),
+            "num_layers": trial.suggest_int("confidence_num_layers", 1, 6, step=1),
             "hidden_units": trial.suggest_int("confidence_hidden_units", 64, 768, step=64),
             "dropout": trial.suggest_float("confidence_dropout", 0.0, 0.5, step=0.1),
             "use_batch_norm": trial.suggest_categorical("confidence_use_batch_norm", [True, False]),
