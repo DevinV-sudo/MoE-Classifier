@@ -61,9 +61,17 @@ class ModularSubModel():
                 logging.info(f"Building confidence submodel from dict...\n")
                 output_dimension = 1
                 final_activation = nn.Sigmoid()
-                
+            
+            #create model filter: first linear layer from which submodels build from
+            input_layer = nn.Linear(self.hidden_dimension, self.hidden_dimension)
+            input_activation = nn.ReLU()
+
             #storage for layer accumulation
             layers = []
+
+            #append the first two static input layers
+            layers.append(input_layer)
+            layers.append(input_activation)
 
             #initial input features (updates through loop)
             in_features = self.hidden_dimension
