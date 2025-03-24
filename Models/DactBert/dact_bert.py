@@ -471,6 +471,9 @@ class TuningEngine():
         os.makedirs(external_config_dir, exist_ok=True)
         external_config_path = os.path.join(external_config_dir, f"external_config_{run_tag}.json")
 
+        #save the configuration path as an attribute
+        self.external_config_path = external_config_path
+
         #get the best parameters
         best_params = train_study.best_trial.params
 
@@ -521,7 +524,10 @@ class TuningEngine():
         This method is responsible for tuning lambda_reg, once the study converges,
         the final value is saved as a instance attribute. 
         '''
-
+        # warn if configuration file is not created, should be ran post external tuning
+        if not hasattr(self, "external_config_path"):
+            logging.error(f"Run external parameter tuning prior to lambda reg tuning for proper saving logic.\n")
+            
         #initialize objective
         lambda_study = optuna.create_study(sampler = optuna.samplers.RandomSampler(),
                                             directions=["minimize", "minimize"],
@@ -537,6 +543,28 @@ class TuningEngine():
         best_trial = min(lambda_study.best_trials, key=lambda t: t.values[1])
         best_lambda_value = best_trial.params["lambda_reg"]
         self.lambda_reg = best_lambda_value
+
+        #open the external configuration path
+        try:
+            logging.info(f"Saving lambda-reg to external configuration...\n")
+            if os.path.isfile(self.external_config_path):
+                logging.info(f"Found external Config File: {self.external_config_path}\nAdding tuned Lambda-Reg value to configuration.\n")
+                with open(self.external_config_path, 'r') as config_path:
+                    external_config = json.load(config_path)
+                logging.info("Successfully pulled configuration file.\n")
+
+                #add lambda reg to config file
+                external_config["lambda_reg"] = self.lambda_reg
+
+                #reload and save modified configuration file
+                logging.info("Saving new configuration to configuration path.\n")
+                with open(self.external_config_path, 'w') as config_file:
+                    json.dump(external_config, config_file, indent=4)
+
+                logging.info("Successfully updated external configuration.\n")
+        
+        except Exception as e:
+            logging.error(f"Failed to update configuration file, returning lambda_reg as an instance attribute.\n")
 
         #return as an instance attribute
         return self.lambda_reg
