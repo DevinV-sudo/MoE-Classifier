@@ -82,20 +82,24 @@ class DactBert(nn.Module):
         backbone_weight_path -> path to the pretuned weights for the model back_bone, if none, then loads a default
         classifier_config -> dict/path representing architecture parameters for confidence sub model
         confidence_config -> dict/path representing architecture parameters for confidence sub model
-        tune_mode -> bool, if true then model outputs tuning metric, if False outputs standard outputs
+        weighted_exit_threshold -> float representing minimum proportion of samples meeting the exit criteria for which to exit a batch
     '''
 
     def __init__(self, 
                     classifier_config: dict = None,
                     confidence_config: dict = None,
                     backbone_weight_path = None,
-                    output_dimension: int = 3
+                    weighted_exit_threshold: float = None,
+                    output_dimension: int = 3,
                     ):
         super(DactBert, self).__init__()
 
         #initialize general params
         self.output_dimension = output_dimension
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+        #initialize weighted exit threshold, if none model continues as usual
+        self.weighted_exit_threshold = weighted_exit_threshold
 
         #set the default backbone weights
         default_weights_path = os.path.join(os.path.dirname(__file__), "DefaultWeights", "backbone_weights_tuned.bin")
@@ -212,14 +216,28 @@ class DactBert(nn.Module):
                 #the halting condition
                 condition = (top_probs * ((1-p) ** d)) >= (second_probs + (p ** d))
 
-                #if the halting condition holds for every sample in the batch
-                if condition.all():
-                    #mark the transformer layer exited
-                    exit_layers[idx] += 1
+                #if the weighted exit has not been selected
+                if not self.weighted_exit_threshold:
+                    #if the halting condition holds for every sample in the batch
+                    if condition.all():
+                        #mark the transformer layer exited
+                        exit_layers[idx] += 1
 
-                    #set the flag to true
-                    exited = True
-                    break
+                        #set the flag to true
+                        exited = True
+                        break
+
+                #if the weighted threshold has been set
+                if self.weighted_exit_threshold:
+                    #if the halting condition holds for a proportion of samples > threshold
+                    if condition.float().mean() > self.weighted_exit_threshold:
+                        #mark the transformer layer exited
+                        exit_layers[idx] += 1
+
+                        #set the flag to true
+                        exited = True
+                        break
+
 
         #if the model is in inference mode, and no exits were made mark the final exit
         if not self.training and not exited:
@@ -322,7 +340,7 @@ class TuningEngine():
             "dropout": trial.suggest_float("classifier_dropout", 0.0, 0.5, step=0.1),
             "use_batch_norm": trial.suggest_categorical("classifier_use_batch_norm", [True, False]),
             "activation": trial.suggest_categorical("classifier_activation", ["ReLU", "LeakyReLU"]),
-            "layer_strategy": trial.suggest_categorical("layer_strategy", ["pyramidal", "inverted_pyramidal", "bow_tie", "None"])
+            "layer_strategy": trial.suggest_categorical("classifier_layer_strategy", ["pyramidal", "inverted_pyramidal", "bow_tie", "None"])
         }
         #suggest hyperparameters for the confidence & package as a dictionary
         confidence_config = {
@@ -331,7 +349,7 @@ class TuningEngine():
             "dropout": trial.suggest_float("confidence_dropout", 0.0, 0.5, step=0.1),
             "use_batch_norm": trial.suggest_categorical("confidence_use_batch_norm", [True, False]),
             "activation": trial.suggest_categorical("confidence_activation", ["ReLU", "LeakyReLU"]),
-            "layer_strategy": trial.suggest_categorical("layer_strategy", ["pyramidal", "inverted_pyramidal", "bow_tie", "None"])
+            "layer_strategy": trial.suggest_categorical("confidence_layer_strategy", ["pyramidal", "inverted_pyramidal", "bow_tie", "None"])
 
         }
 
@@ -1013,7 +1031,7 @@ def main():
     tuning_engine = TuningEngine(output_dimension=3, time_out=60)
 
     #run the tuning pipeline
-    _,_ = tuning_engine.run_pipeline(run_tag="TUNED")
+    _,_ = tuning_engine.run_pipeline(run_tag="MOD")
 
     
 

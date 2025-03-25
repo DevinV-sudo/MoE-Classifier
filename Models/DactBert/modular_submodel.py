@@ -124,23 +124,34 @@ class ModularSubModel():
                         #first half decrease hidden units
                         if i == 1:
                             logging.info(f"Structure is BowTie.\n")
+                        
+                        #calculate the mid point of the layers
+                        mid_point = (num_layers + 1) // 2
 
-                        if i <= num_layers // 2:
+                        if i <= mid_point:
                             logging.info(f"First half of Bowtie (Decrement)\n")
-                            hidden_units = int(base_hidden_units * (1 - i/num_layers))
-                            #store the hidden units for back stepping
+                            hidden_units = max(int(base_hidden_units * (1 - i/num_layers)), 32)
                             previous_hidden.append(hidden_units)
-                            logging.info(f"layer: {i}, units: {hidden_units}\n")
+
+                        elif i == mid_point and num_layers %2 !=0:
+                            logging.info(f"Middle layer for odd layer counts\n")
+                            hidden_units = previous_hidden[-1]
 
                         #second half increase hidden units (back step through previous hidden units)
                         else:
                             logging.info(f"Second half of Bowtie (Increment)\n")
-                            #initialize as most recent hidden unit counr
-                            hidden_units = previous_hidden[reverse_idx]
-                            logging.info(f"layer: {i}, units: {hidden_units}\n")
+                            if len(previous_hidden) > abs(reverse_idx):
+                                #initialize as most recent hidden unit count
+                                hidden_units = previous_hidden[reverse_idx]
 
-                            #decrement by one
-                            reverse_idx  = reverse_idx -1
+                                #decrement by one
+                                reverse_idx  = reverse_idx -1
+                            else:
+                                logging.warning("previous_hidden is empty, using base_hidden_units as fallback.\n")
+                                hidden_units = base_hidden_units
+                        #log dimensions
+                        logging.info(f"layer: {i}, units: {hidden_units}\n")
+
 
                     else:
                         #if not strategy keep base units consistent
@@ -248,14 +259,13 @@ inverted_pyramidal_test_dict = {
 }
 
 bow_tie_test_dict = {
-                    "num_layers": 1,
-                    "hidden_units": 128,
-                    "dropout": 0.3,
-                    "use_batch_norm": True,
+                    "num_layers": 5,
+                    "hidden_units": 640,
+                    "dropout": 0.2,
+                    "use_batch_norm": False,
                     "activation": "ReLU",
                     "layer_strategy": "bow_tie"
 }
-
 #other params for testing
 output_dimension = 3
 hidden_dimension = 768
