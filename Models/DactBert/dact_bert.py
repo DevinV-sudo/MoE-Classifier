@@ -527,7 +527,7 @@ class TuningEngine():
         # warn if configuration file is not created, should be ran post external tuning
         if not hasattr(self, "external_config_path"):
             logging.error(f"Run external parameter tuning prior to lambda reg tuning for proper saving logic.\n")
-            
+
         #initialize objective
         lambda_study = optuna.create_study(sampler = optuna.samplers.RandomSampler(),
                                             directions=["minimize", "minimize"],
@@ -562,12 +562,13 @@ class TuningEngine():
                     json.dump(external_config, config_file, indent=4)
 
                 logging.info("Successfully updated external configuration.\n")
+                return self.lambda_reg
         
         except Exception as e:
             logging.error(f"Failed to update configuration file, returning lambda_reg as an instance attribute.\n")
 
-        #return as an instance attribute
-        return self.lambda_reg
+            #return as an instance attribute
+            return self.lambda_reg
     
          
     def final_train(self, run_tag: str = ''):
